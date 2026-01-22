@@ -91,7 +91,7 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, bas
 
 def main():
     static_dir = "static"
-    public_dir = "public"
+    public_dir = "docs"
 
     # Grab basepath from CLI arguments, default to "/"
     basepath = sys.argv[1] if len(sys.argv) > 1 else "/"
