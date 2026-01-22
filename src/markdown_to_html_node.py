@@ -33,12 +33,26 @@ def markdown_to_html_node(markdown):
             children.append(ParentNode("pre", [code_node]))
 
         elif block_type == BlockType.QUOTE:
-            text = " ".join(
-                line.lstrip("> ").strip()
-                for line in block.split("\n")
-            )
+
+            # First, clean each line: remove the leading ">" or "> "
+            clean_lines = []
+            for line in block.split("\n"):
+                if line.startswith("> "):
+                    clean_lines.append(line[2:])   # remove "> "
+                elif line.startswith(">"):
+                    clean_lines.append(line[1:])   # remove ">"
+                else:
+                    clean_lines.append(line)
+
+            # Join all non-empty lines into a single text string
+            text = " ".join(line.strip() for line in clean_lines if line.strip())
+
+            # Turn that text into inline nodes
             inline_nodes = text_to_children(text)
+
+            # Wrap them in a <p>, then put that inside <blockquote>
             children.append(ParentNode("blockquote", inline_nodes))
+
 
         elif block_type == BlockType.UNORDERED_LIST:
             items = []

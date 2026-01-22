@@ -24,14 +24,14 @@ class BlockType(Enum):
 
 def block_to_block_type(block):
     lines = block.split("\n")
-    
+
     if re.match(r"^#{1,6} ", block):
         return BlockType.HEADING
 
     if block.startswith("```") and block.endswith("```"):
         return BlockType.CODE
     
-    if all(line.startswith("> ") for line in lines):
+    if all((line.startswith("> ") or line.startswith(">")) for line in lines):
         return BlockType.QUOTE
     
     if all(line.startswith("- ") for line in lines):
