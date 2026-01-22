@@ -1,5 +1,6 @@
 from textnode import *
 import os
+import sys
 import shutil
 from htmlnode import *
 from splitnode import *
@@ -32,7 +33,7 @@ def extract_title(markdown):
             return line[2:].strip()
     raise ValueError("No H1 header (#) found in markdown")
 
-def generate_page(from_path, template_path, dest_path):
+def generate_page(from_path, template_path, dest_path, basepath="/"):
     print(f"Generating page from {from_path} to {dest_path} using {template_path}")
 
     # Read markdown content
@@ -52,6 +53,10 @@ def generate_page(from_path, template_path, dest_path):
     # Replace placeholders
     full_html = template_content.replace("{{ Title }}", title).replace("{{ Content }}", html_content)
 
+    # Replace absolute paths with basepath
+    full_html = full_html.replace('href="/', f'href="{basepath}')
+    full_html = full_html.replace('src="/', f'src="{basepath}')
+
     # Ensure destination directory exists
     os.makedirs(os.path.dirname(dest_path), exist_ok=True)
 
@@ -62,7 +67,7 @@ def generate_page(from_path, template_path, dest_path):
     print(f"Page generated at {dest_path}")
 
 
-def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, basepath="/"):
     """
     Recursively crawl the content directory and generate HTML pages for every markdown file.
     """
@@ -72,7 +77,7 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
         if os.path.isdir(entry_path):
             # Recursively process subdirectory
             sub_dest_dir = os.path.join(dest_dir_path, entry)
-            generate_pages_recursive(entry_path, template_path, sub_dest_dir)
+            generate_pages_recursive(entry_path, template_path, sub_dest_dir, basepath)
 
         elif os.path.isfile(entry_path) and entry.endswith(".md"):
             # Compute destination HTML path
@@ -82,12 +87,18 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
             os.makedirs(os.path.dirname(dest_html), exist_ok=True)
 
             print(f"Generating page: {entry_path} → {dest_html}")
-            generate_page(entry_path, template_path, dest_html)
-
+            generate_page(entry_path, template_path, dest_html, basepath)
 
 def main():
     static_dir = "static"
     public_dir = "public"
+
+    # Grab basepath from CLI arguments, default to "/"
+    basepath = sys.argv[1] if len(sys.argv) > 1 else "/"
+    if not basepath.endswith("/"):
+        basepath += "/"
+
+    print(f"Using basepath: {basepath}")
 
     print(f"Copying all static files from '{static_dir}' → '{public_dir}'")
     copy_directory(static_dir, public_dir)
@@ -97,7 +108,7 @@ def main():
     content_dir = "content"
 
     # Generate pages recursively for all markdown files in content/
-    generate_pages_recursive(content_dir, template_html, public_dir)
+    generate_pages_recursive(content_dir, template_html, public_dir, basepath)
 
 if __name__ == "__main__":
     main()
